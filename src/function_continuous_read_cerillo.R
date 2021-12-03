@@ -1,4 +1,6 @@
 # Function to read a continuous measurements from the Cerillo plate reader
+library(tidyr)
+
 read.cerillo.continuous <- function(platemap, file) {
   # Check the file number of lines
   line_nb <- system(paste("wc -l", file), intern=T) %>%
@@ -30,21 +32,11 @@ read.cerillo.continuous <- function(platemap, file) {
   d <- apply(d,2,as.numeric) %>%
     data.frame
   
-  # this step is specific to my way of naming cultures. 
-  # I need to change it to make it more generic
-  
-  # OD <- platemap$sample_id %>% gsub("_.$", "", .) %>% unique %>%
-  #   purrr::set_names() %>%
-  #   purrr::map(function(x) {
-  #     w <- platemap$well[grep(x, platemap$sample_id)]
-  #     print(w)
-  #     list(
-  #       "mean" = apply(d[,colnames(d) %in% w], 1, mean),
-  #       "sd" = apply(d[,colnames(d) %in% w], 1, sd)
-  #     )
-  #   })
   time <- as.POSIXct(d$UNIX.Timestamp, origin="1970-01-01") - as.POSIXct(d$UNIX.Timestamp, origin="1970-01-01")[1]
   time <- time/3600
-  d$hpi <- time  
+  d <- cbind("hpi"=time, d)
   return(d)
 }
+
+# wells <- paste0(LETTERS[1:8], rep(1:12, each=8))
+# file <- "data/211123_continuous_read.CSV"
