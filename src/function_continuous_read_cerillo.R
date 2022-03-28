@@ -1,7 +1,8 @@
 # Function to read a continuous measurements from the Cerillo plate reader
 library(tidyr)
 
-read.cerillo.continuous <- function(platemap, file) {
+read.cerillo.continuous <- function(platemap, file, nb_wells=96
+                                    ) {
   # Check the file number of lines
   line_nb <- system(paste("wc -l", file), intern=T) %>%
     gsub(pattern = " .*", replacement = "") %>%
@@ -28,9 +29,13 @@ read.cerillo.continuous <- function(platemap, file) {
   # only select non empy wells
   wells <- platemap$well %>%
     .[!is.na(platemap$sample_id) & platemap$sample_id != ""]
+  if(nb_wells==12) wells <- c("A1"="A2",	"A2"="A5",	"A3"="A8",	"A4"="A11",
+                                   "B1"="D2", "B2"="D5",	"B3"="D8",	"B4"="D11",
+                                   "C1"="G2",	"C2"="G5",	"C3"="G8",	"C4"="G11")[wells]
   d <- d[,c(1,2,match(wells,colnames(d)))]
   d <- apply(d,2,as.numeric) %>%
     data.frame
+  if(nb_wells==12) names(d)[-c(1,2)] <- names(wells)
   
   time <- as.POSIXct(d$UNIX.Timestamp, origin="1970-01-01") - as.POSIXct(d$UNIX.Timestamp, origin="1970-01-01")[1]
   time <- time/3600
