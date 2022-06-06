@@ -9,7 +9,8 @@ read.cerillo.single <- function(file, nb_wells=96, blank_wells=NULL) {
   if(!nb_wells %in% c(12,96)) stop("Only 96- and 12-wells plates are available for now.")  
   
   run_info <- system(paste("head -n 5", file),intern = T) %>%
-    gsub(pattern = ",\r", replacement = "")
+    gsub(pattern = ",\r", replacement = "") %>%
+    gsub(pattern = ",", replacement = " ")
   
   
   d <- system(paste("tail -n 2", file), intern = T) %>%
@@ -26,11 +27,16 @@ read.cerillo.single <- function(file, nb_wells=96, blank_wells=NULL) {
   
   if(nb_wells==96) {
     well_order <- paste0(LETTERS[1:8], rep(1:12,each=8))
-    names(well_order) <- paste0(LETTERS[1:8], rep(1:12,each=8))
+    names(well_order) <- well_order
   }
-  if(nb_wells==12) well_order <- c("A1"="A2",	"A2"="A5",	"A3"="A8",	"A4"="A11",
-                                   "B1"="D2", "B2"="D5",	"B3"="D8",	"B4"="D11",
-                                   "C1"="G2",	"C2"="G5",	"C3"="G8",	"C4"="G11")
+  if(nb_wells==12) well_order <- 
+    c("A1"="B2",	"A2"="B5",	"A3"="B8",	"A4"="B11",
+      "B1"="E2", "B2"="E5",	"B3"="E8",	"B4"="E11",
+      "C1"="H2",	"C2"="H5",	"C3"="H8",	"C4"="H11")[paste0(LETTERS[1:3], rep(1:4,each=3))]
+  # if(nb_wells==12) well_order <- 
+  #   c("A1"="A2",	"A2"="A5",	"A3"="A8",	"A4"="A11",
+  #     "B1"="D2", "B2"="D5",	"B3"="D8",	"B4"="D11",
+  #     "C1"="G2",	"C2"="G5",	"C3"="G8",	"C4"="G11")[paste0(LETTERS[1:3], rep(1:4,each=3))]
   
   res <- res[match(well_order, res$well),]
   res$well <- names(well_order)
@@ -46,9 +52,13 @@ read.cerillo.single <- function(file, nb_wells=96, blank_wells=NULL) {
       res$raw_OD - mean_OD_blank 
   }
   
-  res$col <- cut(res$raw_OD, breaks=9) %>%
+  cuts <- seq(-0.1,1.5,length.out=9)
+  od_palette <- RColorBrewer::brewer.pal(9,"YlOrBr")
+  names(od_palette) <- cut(seq(0,1.5,length.out=9),breaks = cuts) 
+  
+  res$col <- cut(res$raw_OD, breaks=cuts) %>%
     as.numeric %>%
-    RColorBrewer::brewer.pal(9,"YlOrBr")[.]
+    od_palette[.]
   
   l <- unique(substr(res$well, 1,1))
   if(nb_wells==12) {
