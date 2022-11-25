@@ -28,7 +28,8 @@ read.cerillo.continuous <- function(platemap, file, nb_wells=96
   
   # only select non empy wells
   wells <- platemap$well %>%
-    .[!is.na(platemap$sample_id) & platemap$sample_id != ""]
+    .[!is.na(platemap$sample_id) & platemap$sample_id != ""] %>%
+    as.character()
   if(nb_wells==12) wells <- c("A1"="A2",	"A2"="A5",	"A3"="A8",	"A4"="A11",
                                    "B1"="D2", "B2"="D5",	"B3"="D8",	"B4"="D11",
                                    "C1"="G2",	"C2"="G5",	"C3"="G8",	"C4"="G11")[wells]
