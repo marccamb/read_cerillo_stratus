@@ -1,7 +1,8 @@
 # Function to read a single measurement from the Cerillo plate reader
 library(tidyr)
 
-read.cerillo.single <- function(file, nb_wells=96, blank_wells=NULL) {
+read.cerillo.single <- function(file, nb_wells=96, blank_wells=NULL, 
+                                plot=T, print_runinfo=T) {
   line_nb <- system(paste("wc -l", file), intern=T) %>%
     gsub(pattern = " .*", replacement = "")
   if(line_nb != "7") stop("The file does not contain the right number of lines
@@ -70,20 +71,20 @@ read.cerillo.single <- function(file, nb_wells=96, blank_wells=NULL) {
   }
   
   
-  #pdf("plate_map.pdf", 7,5)
-  par(bty="n", xpd=T, las=1, mar=c(2,2,2,2),fg="gray30", col.axis="gray30")
-  plot(x, y, axes=F,
-       xlab="", ylab="",
-       pch=21, cex=ifelse(nb_wells==96,5,7), col="darkgray", bg=res$col)
-  text(x, y, 
-       round(res$raw_OD, digits = 2))
+  if(plot) {
+    par(bty="n", xpd=T, las=1, mar=c(2,2,2,2),fg="gray30", col.axis="gray30")
+    plot(x, y, axes=F,
+         xlab="", ylab="",
+         pch=21, cex=ifelse(nb_wells==96,5,7), col="darkgray", bg=res$col)
+    text(x, y, 
+         round(res$raw_OD, digits = 2))
+    
+    mtext(rev(l), side = 2, at = 1:ifelse(nb_wells==96,8,3), line = 1)
+    mtext(1:ifelse(nb_wells==96,12,4), side = 3, at = 1:ifelse(nb_wells==96,12,4), line = 1)
+    mtext(run_info[grep("Time of measurment", run_info)], side=1, line=1)
+  }
   
-  mtext(rev(l), side = 2, at = 1:ifelse(nb_wells==96,8,3), line = 1)
-  mtext(1:ifelse(nb_wells==96,12,4), side = 3, at = 1:ifelse(nb_wells==96,12,4), line = 1)
-  mtext(run_info[grep("Time of measurment", run_info)], side=1, line=1)
-  #dev.off()
-  
-  print(run_info)
+  if(print_runinfo) print(run_info)
   return(list(
     "run_info"= run_info,
     "results"= res
