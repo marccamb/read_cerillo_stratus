@@ -4,17 +4,22 @@ library(tidyr)
 read.cerillo.continuous <- function(platemap, file, nb_wells=96
                                     ) {
   # Check the file number of lines
-  line_nb <- system(paste("wc -l", file), intern=T) %>%
-    gsub(pattern = " .*", replacement = "") %>%
-    as.numeric
-  if(line_nb <= 7) stop("The file does not contain enough lines.
+  line_nb <- system(paste("wc -l", file), intern=T) |>
+    gsub(pattern = " .*", replacement = "") |>
+    as.numeric()
+  
+  line_preamble <- system(paste("grep -n UNIX", file), intern=T) |>
+    gsub(pattern = ":.*", replacement = "") |>
+    as.numeric() -1
+  
+  if(line_nb <= line_preamble + 3) stop("The file does not contain enough lines.
                           Check that it is a continuous measurement file.")
   
   # store run info
-  run_info <- system(paste("head -n 5", file),intern = T) %>%
+  run_info <- system(paste("head -n",line_preamble, file),intern = T) %>%
     gsub(pattern = ",\r", replacement = "")
   
-  keep_lines <- line_nb - 5
+  keep_lines <- line_nb - line_preamble
   d <- system(paste("tail -n", keep_lines, file), intern = T) %>%
     strsplit(",") %>%
     do.call(rbind, .)
